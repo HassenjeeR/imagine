@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Top FM Image Stamp – Preloaded Logo + Banner</title>
+<style>
+  :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+  body { margin: 0; background:#f6f7f9; color:#111; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 16px;
+          display: grid; grid-template-columns: 1fr 1.4fr; gap: 16px; }
+  .card { background:#fff; border-radius: 14px; box-shadow: 0 2px 10px rgba(0,0,0,.06); padding: 14px; }
+  h2 { margin: 0 0 10px; font-size: 18px; }
+  label { font-size: 13px; color:#444; }
+  input, select, textarea { width:100%; box-sizing: border-box; }
+  input[type="number"], input[type="range"], input[type="color"], select, textarea {
+    padding:8px; border:1px solid #d0d4db; border-radius:10px;
+  }
+  input[type="color"] { height:40px; padding:0; }
+  textarea { min-height: 64px; }
+  .row { display:grid; grid-template-columns: 1fr 1fr; gap:10px; align-items:center; }
+  .row-3 { display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; align-items:center; }
+  .row-4 { display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; align-items:center; }
+  .actions { display:flex; gap:8px; }
+  button { padding:10px 14px; border-radius:12px; border:0; background:#111; color:#fff; cursor:pointer; }
+  canvas { width:100%; height:auto; border-radius:12px; border:1px solid #e5e7eb; background:#1f2937; }
+  small.help { color:#4b5563; display:block; margin-top:6px; font-size:12px; }
+  @media (max-width: 900px){ .wrap { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <aside class="card">
+    <h2>1) Base image</h2>
+    <input id="baseFile" type="file" accept="image/*" />
+    <div class="row" style="margin-top:8px">
+      <label>Fit</label>
+      <select id="fitMode">
+        <option value="cover">Cover (crop)</option>
+        <option value="contain">Contain (letterbox)</option>
+      </select>
+      <label>Letterbox color</label>
+      <input id="bgColor" type="color" value="#1f2937" />
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label><input id="useOverlay" type="checkbox" checked /> Shadow overlay</label>
+      <input id="overlayOpacity" type="range" min="0" max="1" step="0.01" value="0.35" />
+    </div>
+
+    <h2 style="margin-top:12px">2) Subtitle (CAPS, above headline)</h2>
+    <textarea id="subtitle" placeholder="SUBTITLE">BREAKING</textarea>
+    <div class="row-4" style="margin-top:8px">
+      <label>Align</label>
+      <select id="subAlign"><option value="left">left</option><option value="center" selected>center</option></select>
+      <label>Color</label>
+      <input id="subColor" type="color" value="#ffffff" />
+      <label>Max font</label>
+      <input id="subMax" type="number" value="48" />
+      <label>Min font</label>
+      <input id="subMin" type="number" value="16" />
+    </div>
+    <div class="row-4" style="margin-top:8px">
+      <label><input id="useSubBox" type="checkbox" checked /> Use box</label>
+      <label>Box color</label>
+      <input id="subBoxColor" type="color" value="#000000" />
+      <label>Box opacity</label>
+      <input id="subBoxOpacity" type="range" min="0" max="1" step="0.01" value="0.45" />
+      <label>Padding</label>
+      <input id="subPad" type="number" value="14" />
+    </div>
+
+    <h2 style="margin-top:12px">3) Headline (80% width)</h2>
+    <textarea id="headline" placeholder="Plain text OR use [c=#ff0000]color[/] / [f=Georgia]font[/] / [w=800]weight[/]">Your headline here</textarea>
+    <small class="help">If you don’t use tags, the headline renders untouched. Tags only apply when present.</small>
+    <div class="row-4" style="margin-top:8px">
+      <label>Align</label>
+      <select id="headAlign"><option value="left">left</option><option value="center" selected>center</option><option value="right">right</option></select>
+      <label>Default color</label>
+      <input id="fontColor" type="color" value="#ffffff" />
+      <label>Max font</label>
+      <input id="maxFont" type="number" value="96" />
+      <label>Min font</label>
+      <input id="minFont" type="number" value="24" />
+    </div>
+    <div class="row-4" style="margin-top:8px">
+      <label>Use box</label>
+      <select id="useHeadBox"><option value="1" selected>Yes</option><option value="0">No</option></select>
+      <label>Box color</label>
+      <input id="boxColor" type="color" value="#000000" />
+      <label>Box opacity</label>
+      <input id="boxOpacity" type="range" min="0" max="1" step="0.01" value="0.45" />
+      <label>Padding</label>
+      <input id="boxPad" type="number" value="24" />
+    </div>
+
+    <h2 style="margin-top:12px">4) Logo (top-right)</h2>
+    <input id="logoFile" type="file" accept="image/*" />
+    <input id="logoUrl" type="text" placeholder="or paste logo URL" />
+    <div class="row-3" style="margin-top:8px">
+      <label>Width %</label>
+      <input id="logoPct" type="range" min="6" max="40" value="18" />
+      <label>Padding</label>
+      <input id="logoPad" type="range" min="0" max="120" value="24" />
+      <label>Opacity</label>
+      <input id="logoOpacity" type="range" min="0.1" max="1" step="0.05" value="1" />
+    </div>
+
+    <h2 style="margin-top:12px">5) Frequency banner (bottom, centered)</h2>
+    <input id="bannerFile" type="file" accept="image/*" />
+    <input id="bannerUrl" type="text" placeholder="or paste banner URL" />
+    <div class="row-3" style="margin-top:8px">
+      <label>Width %</label>
+      <input id="bannerPct" type="range" min="20" max="100" value="80" />
+      <label>Bottom margin</label>
+      <input id="bannerBottom" type="range" min="0" max="80" value="16" />
+      <label>Opacity</label>
+      <input id="bannerOpacity" type="range" min="0.1" max="1" step="0.05" value="1" />
+    </div>
+
+    <h2 style="margin-top:12px">6) Output</h2>
+    <div class="row">
+      <label>Preset</label>
+      <select id="preset">
+        <option value="1200x628">1200×628 (FB/Twitter)</option>
+        <option value="1080x1080">1080×1080 (Square)</option>
+        <option value="1920x1080">1920×1080 (Full HD)</option>
+        <option value="1080x1920">1080×1920 (Story)</option>
+        <option value="1280x720">1280×720 (HD)</option>
+      </select>
+      <label>Width</label>
+      <input id="outW" type="number" value="1200" />
+      <label>Height</label>
+      <input id="outH" type="number" value="628" />
+    </div>
+    <div class="row" style="margin-top:8px">
+      <label>Format</label>
+      <select id="fmt"><option value="png" selected>PNG</option><option value="jpeg">JPEG</option></select>
+      <label>JPEG quality</label>
+      <input id="jpegQ" type="number" min="0.5" max="1" step="0.01" value="0.92" />
+    </div>
+    <div class="actions" style="margin-top:10px">
+      <button id="downloadBtn">Download</button>
+      <button id="clearBtn" style="background:#6b7280">Clear</button>
+    </div>
+    <small class="help">If download fails with URL images, it’s a CORS block. Upload images from disk or host them with CORS enabled.</small>
+  </aside>
+
+  <main class="card">
+    <h2>Preview</h2>
+    <canvas id="cv" width="1200" height="628"></canvas>
+  </main>
+</div>
+
+<script>
+(function(){
+  const qs = id => document.getElementById(id);
+  const cv = qs('cv'); const ctx = cv.getContext('2d');
+
+  // Preload URLs
+  const DEFAULT_LOGO_URL = 'https://raw.githubusercontent.com/HassenjeeR/imagine/refs/heads/main/TOP%20FM%20LOGO%203D.png';
+  const DEFAULT_BANNER_URL = 'https://raw.githubusercontent.com/HassenjeeR/imagine/refs/heads/main/frequency.png';
+
+  let baseImg=null, logoImg=null, bannerImg=null;
+
+  const state = {
+    fitMode: 'cover', bgColor: '#1f2937',
+    outW: 1200, outH: 628,
+
+    useOverlay: true, overlayOpacity: 0.35,
+
+    // subtitle
+    subtitle: 'BREAKING', subAlign: 'center', subColor: '#ffffff', subMax: 48, subMin: 16,
+    useSubBox: true, subBoxColor: '#000000', subBoxOpacity: 0.45, subPad: 14,
+
+    // headline
+    text: 'Your headline here', headAlign: 'center', fontColor: '#ffffff', maxFont: 96, minFont: 24,
+    useHeadBox: true, boxColor: '#000000', boxOpacity: 0.45, boxPad: 24,
+
+    // logo
+    logoPct: 18, logoPad: 24, logoOpacity: 1,
+
+    // banner
+    bannerPct: 80, bannerBottom: 16, bannerOpacity: 1,
+
+    fmt: 'png', jpegQ: 0.92
+  };
+
+  // Helpers
+  function hexToRgb(hex){
+    const m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex||'#000000');
+    if (!m) return {r:0,g:0,b:0};
+    return { r: parseInt(m[1],16), g: parseInt(m[2],16), b: parseInt(m[3],16) };
+  }
+  function rgbaFromHex(hex, a){ const {r,g,b}=hexToRgb(hex); return `rgba(${r},${g},${b},${a})`; }
+
+  function hasStyleTags(raw){ return /\[(?:c=|color=|f=|w=)/i.test(raw); }
+
+  // Parse tags only when present: [c=#hex], [f=Font], [w=700] ... close with [/]
+  function parseStyled(raw){
+    if (!hasStyleTags(raw)) return [{ text: raw, color:null, font:null, weight:null }];
+    const segs=[]; let i=0;
+    while(i < raw.length){
+      const open = raw.indexOf('[', i);
+      if (open === -1){ segs.push({text: raw.slice(i), color:null, font:null, weight:null}); break; }
+      if (open > i) segs.push({text: raw.slice(i, open), color:null, font:null, weight:null});
+      const end = raw.indexOf(']', open+1);
+      if (end === -1){ segs.push({text: raw.slice(open), color:null, font:null, weight:null}); break; }
+      const attrStr = raw.slice(open+1, end);
+      const close = raw.indexOf('[/]', end+1);
+      if (close === -1){ segs.push({text: raw.slice(open), color:null, font:null, weight:null}); break; }
+      const inner = raw.slice(end+1, close);
+      const attrs = {};
+      attrStr.split(',').forEach(kv=>{
+        const p=kv.indexOf('=');
+        if(p>0){ const k=kv.slice(0,p).trim(); const v=kv.slice(p+1).trim(); attrs[k]=v; }
+      });
+      segs.push({ text: inner, color: attrs.c || attrs.color || null, font: attrs.f || null, weight: attrs.w || null });
+      i = close + 3;
+    }
+    return segs;
+  }
+  function tokenize(segs){
+    const out=[]; // preserve order and spaces
+    segs.forEach(s=>{
+      s.text.split(/(\s+)/).forEach(p=>{ if(p) out.push({ text:p, color:s.color, font:s.font, weight:s.weight }); });
+    });
+    return out;
+  }
+  function measureWrap(words, size, maxWidth){
+    const lines=[]; let cur=[]; let lineW=0; const lh=Math.round(size*1.2);
+    function w(t){ ctx.font=`${t.weight||'700'} ${size}px ${t.font||'system-ui'}`; return ctx.measureText(t.text).width; }
+    for(const tok of words){
+      const width = w(tok);
+      if (tok.text === '\n'){ lines.push(cur); cur=[]; lineW=0; continue; }
+      if (lineW + width > maxWidth && cur.length){ lines.push(cur); cur=[tok]; lineW=width; }
+      else { cur.push(tok); lineW += width; }
+    }
+    if (cur.length) lines.push(cur);
+    return { lines, lh, totalH: lines.length*lh };
+  }
+  function layoutStyled(raw, maxWidth, maxHeight, minSize, maxSize){
+    const segs = parseStyled(raw); const words = tokenize(segs);
+    let lo=minSize, hi=maxSize, best=lo, bestLines=[], bestLH=0, bestH=0;
+    while(lo<=hi){
+      const mid=Math.floor((lo+hi)/2);
+      const m = measureWrap(words, mid, maxWidth);
+      if (m.totalH <= maxHeight){ best=mid; bestLines=m.lines; bestLH=m.lh; bestH=m.totalH; lo=mid+1; }
+      else { hi=mid-1; }
+    }
+    return { fontSize: best, lines: bestLines, lineHeight: bestLH, totalHeight: bestH };
+  }
+
+  function drawStyledBlock({ rawText, defaultColor, align, useBox, pad, boxColor, boxOpacity, topY, boxWidth, minSize, maxSize, maxHPct }){
+    const maxTextW = boxWidth - pad*2;
+    const maxH = Math.round(state.outH * maxHPct);
+    const fit = layoutStyled(rawText, maxTextW, maxH - pad*2, minSize, maxSize);
+
+    const boxH = fit.totalHeight + pad*2;
+    const xLeft = (state.outW - boxWidth)/2;
+
+    if (useBox){
+      ctx.fillStyle = rgbaFromHex(boxColor, boxOpacity);
+      const r=12,x=xLeft,y=topY,w=boxWidth,h=boxH,rr=Math.min(r,w/2,h/2);
+      ctx.beginPath();
+      ctx.moveTo(x+rr,y); ctx.lineTo(x+w-rr,y); ctx.quadraticCurveTo(x+w,y,x+w,y+rr);
+      ctx.lineTo(x+w,y+h-rr); ctx.quadraticCurveTo(x+w,y+h,x+w-rr,y+h);
+      ctx.lineTo(x+rr,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-rr);
+      ctx.lineTo(x,y+rr); ctx.quadraticCurveTo(x,y,x+rr,y);
+      ctx.closePath(); ctx.fill();
+    }
+
+    // draw lines
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    let y = topY + pad + fit.lineHeight;
+    for(const line of fit.lines){
+      // measure line width for alignment
+      let lineW=0; line.forEach(tok=>{ ctx.font=`${tok.weight||'700'} ${fit.fontSize}px ${tok.font||'system-ui'}`; lineW += ctx.measureText(tok.text).width; });
+      let x;
+      if (align==='left') x = xLeft + pad;
+      else if (align==='right') x = xLeft + boxWidth - pad - lineW;
+      else x = xLeft + (boxWidth - lineW)/2;
+      for(const tok of line){
+        ctx.font = `${tok.weight||'700'} ${fit.fontSize}px ${tok.font||'system-ui'}`;
+        ctx.fillStyle = tok.color || defaultColor;
+        ctx.fillText(tok.text, x, y);
+        x += ctx.measureText(tok.text).width;
+      }
+      y += fit.lineHeight;
+    }
+    return { height: boxH };
+  }
+
+  function draw(){
+    const W=state.outW, H=state.outH; cv.width=W; cv.height=H; ctx.clearRect(0,0,W,H);
+
+    // background
+    ctx.fillStyle = state.bgColor; ctx.fillRect(0,0,W,H);
+
+    // base placeholder
+    if (!baseImg){
+      ctx.fillStyle = '#374151'; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle = '#9ca3af'; ctx.font = '600 18px system-ui';
+      ctx.textAlign='center'; ctx.textBaseline='alphabetic';
+      ctx.fillText('Upload a base image to start', W/2, H/2);
+      ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+    }
+
+    // base image
+    if (baseImg && baseImg.naturalWidth){
+      const sw=baseImg.naturalWidth, sh=baseImg.naturalHeight; const cR=W/H, iR=sw/sh;
+      let dw=W, dh=H, dx=0, dy=0;
+      if (state.fitMode==='cover'){
+        if (iR>cR){ dh=H; dw=dh*iR; dx=(W-dw)/2; } else { dw=W; dh=dw/iR; dy=(H-dh)/2; }
+      } else {
+        if (iR>cR){ dw=W; dh=dw/iR; dy=(H-dh)/2; } else { dh=H; dw=dh*iR; dx=(W-dw)/2; }
+      }
+      ctx.drawImage(baseImg, dx, dy, dw, dh);
+    }
+
+    // overlay
+    if (state.useOverlay){
+      ctx.save();
+      ctx.fillStyle = `rgba(0,0,0,${state.overlayOpacity})`;
+      ctx.fillRect(0,0,W,H);
+      ctx.restore();
+    }
+
+    // banner reserve
+    let bannerReserve = 0, bw=0, bh=0;
+    if (bannerImg && bannerImg.naturalWidth){
+      bw = (state.bannerPct/100)*W;
+      const scale = bw / bannerImg.naturalWidth;
+      bh = bannerImg.naturalHeight * scale;
+      bannerReserve = bh + state.bannerBottom + 8;
+    }
+
+    // measure stacked subtitle + headline so they sit together above banner
+    const boxWidth = W*0.8;
+    const subMaxH = Math.round(H*0.18);
+    const headMaxH = Math.round(H*0.35);
+    const subExists = state.subtitle && state.subtitle.trim();
+    const headExists = state.text && state.text.trim();
+
+    const subFit = subExists ? layoutStyled(state.subtitle.trim().toUpperCase(),
+                    boxWidth - state.subPad*2, subMaxH - state.subPad*2,
+                    state.subMin, state.subMax) : {totalHeight:0};
+    const headFit = headExists ? layoutStyled(state.text.trim(),
+                    boxWidth - state.boxPad*2, headMaxH - state.boxPad*2,
+                    state.minFont, state.maxFont) : {totalHeight:0};
+
+    const subBoxH = subExists ? subFit.totalHeight + state.subPad*2 : 0;
+    const headBoxH = headExists ? headFit.totalHeight + state.boxPad*2 : 0;
+    const stackH = subBoxH + (subBoxH && headBoxH ? 8 : 0) + headBoxH;
+
+    let startY = H - bannerReserve - stackH - 16; if (startY < 16) startY = 16;
+
+    // subtitle just above headline
+    let cursorY = startY;
+    if (subBoxH){
+      const sub = drawStyledBlock({
+        rawText: state.subtitle.trim().toUpperCase(),
+        defaultColor: state.subColor,
+        align: state.subAlign,
+        useBox: state.useSubBox,
+        pad: state.subPad,
+        boxColor: state.subBoxColor,
+        boxOpacity: state.subBoxOpacity,
+        topY: cursorY,
+        boxWidth,
+        minSize: state.subMin,
+        maxSize: state.subMax,
+        maxHPct: subMaxH/H
+      });
+      cursorY += sub.height + 8;
+    }
+
+    if (headBoxH){
+      drawStyledBlock({
+        rawText: state.text.trim(),
+        defaultColor: state.fontColor,
+        align: state.headAlign,
+        useBox: state.useHeadBox==='1' || state.useHeadBox===true,
+        pad: state.boxPad,
+        boxColor: state.boxColor,
+        boxOpacity: state.boxOpacity,
+        topY: cursorY,
+        boxWidth,
+        minSize: state.minFont,
+        maxSize: state.maxFont,
+        maxHPct: headMaxH/H
+      });
+    }
+
+    // logo (top-right)
+    if (logoImg && logoImg.naturalWidth){
+      const desiredW = (state.logoPct/100)*W;
+      const scale = desiredW / logoImg.naturalWidth;
+      const lw = desiredW, lh = logoImg.naturalHeight*scale;
+      const lx = W - lw - state.logoPad, ly = state.logoPad;
+      ctx.save(); ctx.globalAlpha = state.logoOpacity; ctx.drawImage(logoImg, lx, ly, lw, lh); ctx.restore();
+    }
+
+    // banner (bottom center)
+    if (bannerImg && bannerImg.naturalWidth){
+      const bx = (W - bw)/2, by = H - bh - state.bannerBottom;
+      ctx.save(); ctx.globalAlpha = state.bannerOpacity; ctx.drawImage(bannerImg, bx, by, bw, bh); ctx.restore();
+    }
+  }
+
+  // Loaders
+  function loadFileToImage(file, cb){
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = ()=>{ URL.revokeObjectURL(url); cb(img); };
+    img.onerror = ()=> alert('Could not load image.');
+    img.src = url;
+  }
+  function loadUrlToImage(url, cors, cb){
+    const img = new Image();
+    if (cors) img.crossOrigin = 'anonymous';
+    img.onload = ()=> cb(img);
+    img.onerror = ()=> console.warn('Could not load image from URL:', url);
+    img.src = url;
+  }
+
+  // Preload logo + banner
+  function preloadAssets(){
+    // Logo
+    loadUrlToImage(DEFAULT_LOGO_URL, true, img=>{
+      logoImg = img;
+      const el = qs('logoUrl'); if (el) el.value = DEFAULT_LOGO_URL;
+      draw();
+    });
+    // Banner
+    loadUrlToImage(DEFAULT_BANNER_URL, true, img=>{
+      bannerImg = img;
+      const el = qs('bannerUrl'); if (el) el.value = DEFAULT_BANNER_URL;
+      draw();
+    });
+  }
+  preloadAssets();
+
+  // Wire UI
+  qs('baseFile').addEventListener('change', e=>{
+    const f=e.target.files?.[0]; if(f) loadFileToImage(f, img=>{ baseImg=img; draw(); });
+  });
+  qs('fitMode').addEventListener('change', e=>{ state.fitMode=e.target.value; draw(); });
+  qs('bgColor').addEventListener('input', e=>{ state.bgColor=e.target.value; draw(); });
+  qs('useOverlay').addEventListener('input', e=>{ state.useOverlay = e.target.checked; draw(); });
+  qs('overlayOpacity').addEventListener('input', e=>{ state.overlayOpacity=parseFloat(e.target.value)||0; draw(); });
+
+  qs('subtitle').addEventListener('input', e=>{ state.subtitle=e.target.value; draw(); });
+  qs('subAlign').addEventListener('change', e=>{ state.subAlign=e.target.value; draw(); });
+  qs('subColor').addEventListener('input', e=>{ state.subColor=e.target.value; draw(); });
+  qs('subMax').addEventListener('input', e=>{ state.subMax=parseInt(e.target.value)||48; draw(); });
+  qs('subMin').addEventListener('input', e=>{ state.subMin=parseInt(e.target.value)||16; draw(); });
+  qs('useSubBox').addEventListener('change', e=>{ state.useSubBox=e.target.checked; draw(); });
+  qs('subBoxColor').addEventListener('input', e=>{ state.subBoxColor=e.target.value; draw(); });
+  qs('subBoxOpacity').addEventListener('input', e=>{ state.subBoxOpacity=parseFloat(e.target.value)||0; draw(); });
+  qs('subPad').addEventListener('input', e=>{ state.subPad=parseInt(e.target.value)||0; draw(); });
+
+  qs('headline').addEventListener('input', e=>{ state.text=e.target.value; draw(); });
+  qs('headAlign').addEventListener('change', e=>{ state.headAlign=e.target.value; draw(); });
+  qs('fontColor').addEventListener('input', e=>{ state.fontColor=e.target.value; draw(); });
+  qs('maxFont').addEventListener('input', e=>{ state.maxFont=parseInt(e.target.value)||96; draw(); });
+  qs('minFont').addEventListener('input', e=>{ state.minFont=parseInt(e.target.value)||24; draw(); });
+  qs('useHeadBox').addEventListener('change', e=>{ state.useHeadBox=e.target.value; draw(); });
+  qs('boxColor').addEventListener('input', e=>{ state.boxColor=e.target.value; draw(); });
+  qs('boxOpacity').addEventListener('input', e=>{ state.boxOpacity=parseFloat(e.target.value)||0; draw(); });
+  qs('boxPad').addEventListener('input', e=>{ state.boxPad=parseInt(e.target.value)||0; draw(); });
+
+  qs('logoFile').addEventListener('change', e=>{ const f=e.target.files?.[0]; if(f) loadFileToImage(f, img=>{ logoImg=img; draw(); }); });
+  qs('logoUrl').addEventListener('change', e=>{ const u=e.target.value.trim(); if(u) loadUrlToImage(u, true, img=>{ logoImg=img; draw(); }); });
+  qs('logoPct').addEventListener('input', e=>{ state.logoPct=parseInt(e.target.value)||0; draw(); });
+  qs('logoPad').addEventListener('input', e=>{ state.logoPad=parseInt(e.target.value)||0; draw(); });
+  qs('logoOpacity').addEventListener('input', e=>{ state.logoOpacity=parseFloat(e.target.value)||1; draw(); });
+
+  qs('bannerFile').addEventListener('change', e=>{ const f=e.target.files?.[0]; if(f) loadFileToImage(f, img=>{ bannerImg=img; draw(); }); });
+  qs('bannerUrl').addEventListener('change', e=>{ const u=e.target.value.trim(); if(u) loadUrlToImage(u, true, img=>{ bannerImg=img; draw(); }); });
+  qs('bannerPct').addEventListener('input', e=>{ state.bannerPct=parseInt(e.target.value)||80; draw(); });
+  qs('bannerBottom').addEventListener('input', e=>{ state.bannerBottom=parseInt(e.target.value)||16; draw(); });
+  qs('bannerOpacity').addEventListener('input', e=>{ state.bannerOpacity=parseFloat(e.target.value)||1; draw(); });
+
+  qs('preset').addEventListener('change', e=>{ const [w,h]=e.target.value.split('x').map(Number); state.outW=w; state.outH=h; qs('outW').value=w; qs('outH').value=h; draw(); });
+  qs('outW').addEventListener('input', e=>{ state.outW=parseInt(e.target.value)||0; draw(); });
+  qs('outH').addEventListener('input', e=>{ state.outH=parseInt(e.target.value)||0; draw(); });
+
+  qs('downloadBtn').addEventListener('click', ()=>{
+    try{
+      const type = qs('fmt').value === 'png' ? 'image/png' : 'image/jpeg';
+      const data = (type==='image/png') ? cv.toDataURL('image/png') : cv.toDataURL('image/jpeg', parseFloat(qs('jpegQ').value||'0.92'));
+      const a = document.createElement('a');
+      a.download = `image_${state.outW}x${state.outH}.${qs('fmt').value === 'png' ? 'png':'jpg'}`;
+      a.href = data; a.click();
+    }catch(err){
+      alert('Download failed (likely CORS). Upload images instead of using URLs, or host with CORS enabled.');
+    }
+  });
+
+  qs('clearBtn').addEventListener('click', ()=>{
+    baseImg=null; logoImg=null; bannerImg=null;
+    ['baseFile','logoFile','bannerFile','logoUrl','bannerUrl'].forEach(id=>{ const el=qs(id); if(el) el.value=''; });
+    draw();
+  });
+
+  // Initial draw
+  draw();
+})();
+</script>
+</body>
+</html>
